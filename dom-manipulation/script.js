@@ -1,7 +1,8 @@
 // Initial quote data
 let quotes = [
   { text: "The only limit to our realization of tomorrow is our doubts of today.", category: "Motivation" },
-  { text: "Life is what happens when you're busy making other plans.", category: "Life" }
+  { text: "Life is what happens when you're busy making other plans.", category: "Life" },
+  { text: "In the middle of every difficulty lies opportunity.", category: "Inspiration" }
 ];
 
 // Function to display a random quote
@@ -23,15 +24,19 @@ function addQuote() {
   };
 
   if (newQuote.text && newQuote.category) {
-    quotes.push(newQuote);
+    quotes.push(newQuote);           // Add to array
+    showRandomQuote();               // Show the new quote
     textInput.value = "";
     categoryInput.value = "";
     alert("Quote added successfully!");
   } else {
-    alert("Please enter both text and category.");
+    alert("Please enter both a quote and a category.");
   }
 }
 
 // Event listeners
 document.getElementById("newQuote").addEventListener("click", showRandomQuote);
 document.getElementById("addQuoteBtn").addEventListener("click", addQuote);
+
+// Optional: show one quote on page load
+window.addEventListener("DOMContentLoaded", showRandomQuote);
