@@ -2,6 +2,34 @@
 
 let quotes = [];
 
+// Create and add the form to the DOM dynamically
+function createAddQuoteForm() {
+  const formDiv = document.createElement("div");
+
+  const textInput = document.createElement("input");
+  textInput.id = "newQuoteText";
+  textInput.type = "text";
+  textInput.placeholder = "Enter a new quote";
+
+  const categoryInput = document.createElement("input");
+  categoryInput.id = "newQuoteCategory";
+  categoryInput.type = "text";
+  categoryInput.placeholder = "Enter quote category";
+
+  const addButton = document.createElement("button");
+  addButton.id = "addQuoteBtn";
+  addButton.textContent = "Add Quote";
+  addButton.addEventListener("click", addQuote);
+
+  formDiv.appendChild(textInput);
+  formDiv.appendChild(categoryInput);
+  formDiv.appendChild(addButton);
+
+  formDiv.style.marginTop = "20px";
+
+  document.body.appendChild(formDiv);
+}
+
 // Load quotes from localStorage or initialize default
 function loadQuotes() {
   const storedQuotes = localStorage.getItem("quotes");
@@ -141,12 +169,13 @@ function syncQuotes() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  createAddQuoteForm();
+
   loadQuotes();
   populateCategories();
   showRandomQuote();
 
   document.getElementById("newQuote").addEventListener("click", showRandomQuote);
-  document.getElementById("addQuoteBtn").addEventListener("click", addQuote);
   document.getElementById("categoryFilter").addEventListener("change", filterQuotes);
   document.getElementById("exportBtn").addEventListener("click", exportToJson);
 
