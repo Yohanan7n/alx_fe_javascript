@@ -1,63 +1,106 @@
-104
-105
-106
-107
-108
-109
-110
-111
-112
-113
-114
-115
-116
-117
-118
-119
-120
-121
-122
-123
-124
-125
-126
-127
-128
-129
-130
-131
-132
-133
-134
-135
-136
-137
-138
-139
-140
-141
-142
-143
-144
-145
-146
-147
-148
-149
-150
-151
-152
-153
-154
-155
-156
-157
-158
-159
-160
-161
-162
+// ===== Dynamic Quote Generator with Web Storage, JSON Handling, and Filtering =====
+
 let quotes = [];
+
+// Load quotes from localStorage or initialize default
+function loadQuotes() {
+  const storedQuotes = localStorage.getItem("quotes");
+  if (storedQuotes) {
+    quotes = JSON.parse(storedQuotes);
+  } else {
+    quotes = [
+      { text: "The only limit to our realization of tomorrow is our doubts of today.", category: "Motivation" },
+      { text: "Life is what happens when you're busy making other plans.", category: "Life" },
+      { text: "In the middle of every difficulty lies opportunity.", category: "Inspiration" }
+    ];
+    saveQuotes();
+  }
+}
+
+function saveQuotes() {
+  localStorage.setItem("quotes", JSON.stringify(quotes));
+  populateCategories();
+}
+
+function showRandomQuote() {
+  const display = document.getElementById("quoteDisplay");
+  const selectedCategory = document.getElementById("categoryFilter").value;
+  const filteredQuotes = selectedCategory === "all" ? quotes : quotes.filter(q => q.category === selectedCategory);
+  if (filteredQuotes.length === 0) {
+    display.innerHTML = "<p>No quotes found for selected category.</p>";
+    return;
+  }
+  const quote = filteredQuotes[Math.floor(Math.random() * filteredQuotes.length)];
+  display.innerHTML = `<p>"${quote.text}" - <em>${quote.category}</em></p>`;
+  sessionStorage.setItem("lastQuote", JSON.stringify(quote));
+}
+
+function addQuote() {
+  const textInput = document.getElementById("newQuoteText");
+  const categoryInput = document.getElementById("newQuoteCategory");
+
+  const newQuote = {
+    text: textInput.value.trim(),
+    category: categoryInput.value.trim()
+  };
+
+  if (newQuote.text && newQuote.category) {
+    quotes.push(newQuote);
+    saveQuotes();
+    showRandomQuote();
+    textInput.value = "";
+    categoryInput.value = "";
+    alert("Quote added successfully!");
+    postQuoteToServer(newQuote); // Post new quote to mock server
+  } else {
+    alert("Please enter both a quote and a category.");
+  }
+}
+
+function populateCategories() {
+  const filter = document.getElementById("categoryFilter");
+  const categories = [...new Set(quotes.map(q => q.category))];
+  const selected = localStorage.getItem("lastCategory") || "all";
+
+  filter.innerHTML = `<option value="all">All Categories</option>`;
+  categories.forEach(cat => {
+    const option = document.createElement("option");
+    option.value = cat;
+    option.textContent = cat;
+    if (cat === selected) option.selected = true;
+    filter.appendChild(option);
+  });
+}
+
+function filterQuotes() {
+  localStorage.setItem("lastCategory", document.getElementById("categoryFilter").value);
+  showRandomQuote();
+}
+
+function exportToJson() {
+  const blob = new Blob([JSON.stringify(quotes, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "quotes.json";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function importFromJsonFile(event) {
+  const fileReader = new FileReader();
+  fileReader.onload = function(event) {
+    const importedQuotes = JSON.parse(event.target.result);
+    quotes.push(...importedQuotes);
+    saveQuotes();
+    alert('Quotes imported successfully!');
+  };
+  fileReader.readAsText(event.target.files[0]);
+}
+
+async function fetchQuotesFromServer() {
   try {
     const response = await fetch("https://jsonplaceholder.typicode.com/posts");
     const serverQuotes = await response.json();
