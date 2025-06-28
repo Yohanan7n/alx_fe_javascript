@@ -51,6 +51,7 @@ function addQuote() {
     textInput.value = "";
     categoryInput.value = "";
     alert("Quote added successfully!");
+    postQuoteToServer(newQuote); // Post new quote to mock server
   } else {
     alert("Please enter both a quote and a category.");
   }
@@ -70,25 +71,6 @@ function populateCategories() {
     filter.appendChild(option);
   });
 }
-function fetchQuotesFromServer() {
-  fetch("https://jsonplaceholder.typicode.com/posts")
-    .then(res => res.json())
-    .then(serverQuotes => {
-      // process serverQuotes here
-    });
-}
-function postQuoteToServer(quote) {
-  fetch("https://jsonplaceholder.typicode.com/posts", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(quote)
-  });
-}
-setInterval(syncQuotes, 60000); // Every 60 seconds
-const status = document.getElementById("syncStatus");
-status.textContent = "Quotes synced with server!";
-
-
 
 function filterQuotes() {
   localStorage.setItem("lastCategory", document.getElementById("categoryFilter").value);
@@ -118,13 +100,62 @@ function importFromJsonFile(event) {
   fileReader.readAsText(event.target.files[0]);
 }
 
+async function fetchQuotesFromServer() {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts");
+    const serverQuotes = await response.json();
+    const formattedQuotes = serverQuotes.slice(0, 5).map(post => ({
+      text: post.title,
+      category: "Server"
+    }));
+
+    // Simple conflict resolution: replace duplicates by text
+    const localTexts = quotes.map(q => q.text);
+    const newQuotes = formattedQuotes.filter(q => !localTexts.includes(q.text));
+
+    if (newQuotes.length > 0) {
+      quotes.push(...newQuotes);
+      saveQuotes();
+      const status = document.getElementById("syncStatus");
+      if (status) status.textContent = "New quotes synced from server.";
+    }
+  } catch (error) {
+    console.error("Failed to fetch from server", error);
+  }
+}
+
+async function postQuoteToServer(quote) {
+  try {
+    await fetch("https://jsonplaceholder.typicode.com/posts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(quote)
+    });
+  } catch (error) {
+    console.error("Failed to post to server", error);
+  }
+}
+
+function syncQuotes() {
+  fetchQuotesFromServer();
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   loadQuotes();
   populateCategories();
   showRandomQuote();
-  
+
   document.getElementById("newQuote").addEventListener("click", showRandomQuote);
   document.getElementById("addQuoteBtn").addEventListener("click", addQuote);
   document.getElementById("categoryFilter").addEventListener("change", filterQuotes);
   document.getElementById("exportBtn").addEventListener("click", exportToJson);
+
+  // Optional UI status
+  const syncStatus = document.createElement("div");
+  syncStatus.id = "syncStatus";
+  syncStatus.style.marginTop = "10px";
+  document.body.appendChild(syncStatus);
+
+  // Periodic sync every 60 seconds
+  setInterval(syncQuotes, 60000);
 });
