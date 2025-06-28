@@ -70,6 +70,25 @@ function populateCategories() {
     filter.appendChild(option);
   });
 }
+function fetchQuotesFromServer() {
+  fetch("https://jsonplaceholder.typicode.com/posts")
+    .then(res => res.json())
+    .then(serverQuotes => {
+      // process serverQuotes here
+    });
+}
+function postQuoteToServer(quote) {
+  fetch("https://jsonplaceholder.typicode.com/posts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(quote)
+  });
+}
+setInterval(syncQuotes, 60000); // Every 60 seconds
+const status = document.getElementById("syncStatus");
+status.textContent = "Quotes synced with server!";
+
+
 
 function filterQuotes() {
   localStorage.setItem("lastCategory", document.getElementById("categoryFilter").value);
